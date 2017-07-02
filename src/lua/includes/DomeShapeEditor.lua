@@ -29,7 +29,7 @@ function DOME_ENT.GUI_manager_shape_editor:Init()
 	--sphere by default
 	self.ChosenType = "Sphere"
 	self.cbox.OnSelect=function(cbox,index,value)
-		self:SetShapeIndex(index)
+		self:SetShapeIndex(index,value)
 	end
 	
 	self.props = vgui.Create("DProperties",self)
