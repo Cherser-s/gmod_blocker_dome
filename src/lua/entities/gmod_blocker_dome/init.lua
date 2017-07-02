@@ -4,28 +4,7 @@ AddCSLuaFile('shared.lua')
 
 
 local function BlockData()
-	local tbl = {}
-	tbl.permitted = {}
-	tbl.preventMode = 3 --1 teleport, 2 damage and dissolve, 3 just dissolve
-	
-	function tbl:GetMode()
-		return "Sphere"
-	end
-	
-	function tbl:GetPreventMode()
-		return self.preventMode
-	end
-	
-	function tbl:SetSphere(radius)
-		if not isnumber(radius) then return end
-		self.Radius = radius
-	end
-	
-	function tbl:GetPermittedPlayers()
-		return self.permitted
-	end
-	
-	return tbl
+	return require("BlockData")
 end
 
 local function makeDissolve(self,ent,damage)
@@ -99,10 +78,7 @@ function ENT:Initialize()
 	self:SetUseType( SIMPLE_USE )
 	
 	self.Block_Data = BlockData()
-	self.Block_Data.Radius = 512 --radius in hammer units
-	self.Block_Data.permitted = {}
 end
-
 
 
 function ENT:Think()
