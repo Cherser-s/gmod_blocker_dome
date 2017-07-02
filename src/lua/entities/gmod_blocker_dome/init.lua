@@ -1,11 +1,14 @@
 include('shared.lua')
+include('includes/BlockData.lua')
 AddCSLuaFile('cl_init.lua')
 AddCSLuaFile('shared.lua')
+AddCSLuaFile('includes/DomeFrameUI.lua')
+AddCSLuaFile('includes/DomePermissionEditor.lua')
+AddCSLuaFile('includes/DomeShapeEditor.lua')
+
+util.AddNetworkString("dome_edit_data")
 
 
-local function BlockData()
-	return require("BlockData")
-end
 
 local function makeDissolve(self,ent,damage)
 		if !ent:IsValid() then return end
@@ -77,9 +80,18 @@ function ENT:Initialize()
 	self:SetSolid( SOLID_VPHYSICS )
 	self:SetUseType( SIMPLE_USE )
 	
-	self.Block_Data = BlockData()
+	self.Block_Data = DOME_ENT.BlockData()
 end
 
+function ENT:Use(activator,caller,usetype,value)
+	if IsValid(caller) and caller:IsPlayer() then
+		net.Start("dome_edit_data")
+		net.WriteEntity(self)
+		net.WriteTable(self.Block_Data)
+		--Send data
+		net.Send(caller)
+	end
+end
 
 function ENT:Think()
 	if not (self:IsValid() and self.Block_Data) then return end
@@ -117,12 +129,12 @@ function ENT:Think()
 	
 	
 	local function isInSphere(ent)		
-		return self:GetPos():DistToSqr(ent:GetPos())<=(self.Block_Data.Radius)^2
+		return self:GetPos():DistToSqr(ent:GetPos())<=(self.Block_Data.Shape.Radius)^2
 	end
 	
 	local function checkPlayer(ply)
 		--use within sphere
-		if (not table.HasValue(self.Block_Data.permitted,ply)) then 
+		if (!self.Block_Data:IsPermitted(pwner)) then 
 			PreventFuncs.Players[self.Block_Data:GetPreventMode()](self,ply)
 		end
 	end
@@ -130,7 +142,7 @@ function ENT:Think()
 	local function checkNPC(ply)
 		--use within sphere
 		local pwner = getOwner(ply)
-		if  pwner and (not table.HasValue(self.Block_Data.permitted,pwner)) then
+		if  pwner and (!self.Block_Data:IsPermitted(pwner)) then
 			PreventFuncs.Players[self.Block_Data:GetPreventMode()](self,ply)
 		end
 	end
@@ -140,7 +152,7 @@ function ENT:Think()
 		if prop == self then return end		
 		
 		local pwner = getOwner(prop)
-		if  pwner and (not table.HasValue(self.Block_Data.permitted,pwner)) then
+		if  pwner and (!self.Block_Data:IsPermitted(pwner)) then
 			PreventFuncs.Props[self.Block_Data:GetPreventMode()](self,prop)
 		end
 	end
