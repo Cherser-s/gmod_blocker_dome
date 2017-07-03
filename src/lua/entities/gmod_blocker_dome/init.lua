@@ -7,8 +7,8 @@ AddCSLuaFile('includes/DomePermissionEditor.lua')
 AddCSLuaFile('includes/DomeShapeEditor.lua')
 
 util.AddNetworkString("dome_edit_data")
-
-
+util.AddNetworkString("gmod_dome_data_edited")
+util.AddNetworkString("dome_get_type_data")
 
 local function makeDissolve(self,ent,damage)
 		if !ent:IsValid() then return end
@@ -33,6 +33,36 @@ local function makeDissolve(self,ent,damage)
 			timer.Simple(0.01,function() if dissolver:IsValid() then dissolver:Remove() end end)
 		end
 end
+
+local function getOwner(entity)
+		if entity == nil then return end
+		
+		if entity.GetPlayer then
+			local ply = entity:GetPlayer()
+			if IsValid(ply) then return ply end
+		end
+
+		local OnDieFunctions = entity.OnDieFunctions
+		if OnDieFunctions then
+			if OnDieFunctions.GetCountUpdate then
+				if OnDieFunctions.GetCountUpdate.Args then
+					if OnDieFunctions.GetCountUpdate.Args[1] then return OnDieFunctions.GetCountUpdate.Args[1] end
+				end
+			end
+			if OnDieFunctions.undo1 then
+				if OnDieFunctions.undo1.Args then
+					if OnDieFunctions.undo1.Args[2] then return OnDieFunctions.undo1.Args[2] end
+				end
+			end
+		end
+
+		if entity.GetOwner then
+			local ply = entity:GetOwner()
+			if IsValid(ply) then return ply end
+		end
+
+		return nil	
+	end
 
 local PreventFuncs = {
 
@@ -93,39 +123,12 @@ function ENT:Use(activator,caller,usetype,value)
 	end
 end
 
+
 function ENT:Think()
 	if not (self:IsValid() and self.Block_Data) then return end
 	local i = 0
 	
-	local function getOwner(entity)
-		if entity == nil then return end
-		
-		if entity.GetPlayer then
-			local ply = entity:GetPlayer()
-			if IsValid(ply) then return ply end
-		end
-
-		local OnDieFunctions = entity.OnDieFunctions
-		if OnDieFunctions then
-			if OnDieFunctions.GetCountUpdate then
-				if OnDieFunctions.GetCountUpdate.Args then
-					if OnDieFunctions.GetCountUpdate.Args[1] then return OnDieFunctions.GetCountUpdate.Args[1] end
-				end
-			end
-			if OnDieFunctions.undo1 then
-				if OnDieFunctions.undo1.Args then
-					if OnDieFunctions.undo1.Args[2] then return OnDieFunctions.undo1.Args[2] end
-				end
-			end
-		end
-
-		if entity.GetOwner then
-			local ply = entity:GetOwner()
-			if IsValid(ply) then return ply end
-		end
-
-		return nil	
-	end
+	
 	
 	
 	local function isInSphere(ent)		
@@ -173,3 +176,23 @@ function ENT:Think()
 	end
 	
 end
+
+
+function ENT:OnBlockDataEdited(data)
+	self.Block_Data:MakeFromCopy(data)
+	
+	net.Start("dome_get_type_data")
+	net.WriteEntity(self)
+	net.WriteTable(self.Block_Data.Shape)
+	net.Broadcast()
+end
+
+net.Receive("gmod_dome_data_edited",
+function(len,ply)
+	if len<2 then return end
+	local ent = net.ReadEntity()
+	local data = net.ReadTable()
+	if (getOwner(ent)==ply) then
+		ent:OnBlockDataEdited(data)
+	end
+end)

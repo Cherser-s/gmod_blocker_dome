@@ -41,7 +41,7 @@ function ENT:MakeHollowProp()
 	end
 	
 	local drawer = self.drawType
-	if drawer.shape_type=="Sphere" then 
+	if drawer.Type=="Sphere" then 
 		self.c_prop = ClientsideModel("models/props/sphere.mdl",RENDERGROUP_TRANSLUCENT )		
 		self.c_prop:SetModelScale(self.drawType.Radius/20)
 	end
@@ -55,8 +55,9 @@ function ENT:MakeHollowProp()
 	end
 end
 
+
 function ENT:SendInfoBack(data)
-	net.Start("gmod_blocker_dome_info_update")
+	net.Start("gmod_dome_data_edited")
 	net.WriteEntity(self)
 	net.WriteTable(data)
 	net.SendToServer()
@@ -65,7 +66,7 @@ end
 function ENT:OpenEditor(data)
 	local frame = vgui.Create("DFrame")
 	local panel = vgui.Create("DDomeManager",frame)
-	panel:SetData(data)
+	panel:SetData(data,self)
 	panel:Dock(FILL)
 	frame:SetTitle("Editor")
 	frame:SetSize(500,500)
@@ -76,10 +77,8 @@ end
 net.Receive("dome_get_type_data",function(len)
 	if len<2 then error("expected at least two items in stream") end
 	local ent = net.ReadEntity()
-	if ent:GetClass()!= ENT.ClassName then 
-		error("Expected ent with specified class") 
-	end
 	ent.drawType = net.ReadTable()
+	ent:MakeHollowProp()
 end)
 
 net.Receive("dome_edit_data",function(len)

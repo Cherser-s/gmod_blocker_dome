@@ -7,10 +7,12 @@ local PropTypes = {
 	Sphere = function(panel)
 		panel.props:Clear()
 		local RadiusRow = panel.props:CreateRow( "Sphere Parameters", "Radius" )
-		RadiusRow:Setup( "float" )
+		RadiusRow:Setup( "Float", {min = 10, max = 2000}  )
 		RadiusRow:SetValue( panel.Block_Data.Shape.Radius or 0.0  )
-		RadiusRow.DataChanged = function( _, val ) 
+		RadiusRow.DataChanged = function( self, val ) 
+			
 			panel.Block_Data.Shape.Radius = val
+			
 		end
 	end,
 	Box = function(panel)
@@ -33,7 +35,9 @@ function DOME_ENT.GUI_manager_shape_editor:Init()
 	end
 	
 	self.props = vgui.Create("DProperties",self)
+	self.props:SetMinimumSize(0,100)
 	self.props:Dock(BOTTOM)
+	
 end
 
 function DOME_ENT.GUI_manager_shape_editor:SetShapeIndex(index,value)
@@ -53,7 +57,7 @@ end
 function DOME_ENT.GUI_manager_shape_editor:SetData(data)
 	self.Block_Data = data
 	self.cbox:ChooseOption(data.Shape.Type)
-	PropTypes[value](self)
+	PropTypes[data.Shape.Type](self)
 end
 
 function DOME_ENT.GUI_manager_shape_editor:PerformLayout(w,h)

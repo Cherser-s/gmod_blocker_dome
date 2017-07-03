@@ -28,6 +28,9 @@ function DOME_ENT.GUI_manager:SetData(data,entity)
 	self.PermitBox:SetData(data)
 end
 
+function DOME_ENT.GUI_manager:OnRemove()
+	self.ent_sender:SendInfoBack(self.Block_Data)
+end
 
 vgui.Register("DDomeManager",DOME_ENT.GUI_manager,"Panel")
 
