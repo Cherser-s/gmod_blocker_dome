@@ -36,7 +36,7 @@ end
 function BlockData:GetPermittedPlayers()
 	return self.permitted
 end
-	
+
 function BlockData:GetPermissionType()
 	return self.permission_type
 end
@@ -49,8 +49,16 @@ function BlockData:SetPermissionType(ptype)
 	self.permission_type = ptype
 end
 
+function BlockData:MakeFromSteamID()
+	self.permitted = {}
+	for K,V in pairs(self.permittedSteamID) do
+		local ply = player.GetBySteamID(V)
+		if ply then table.insert(self.permitted,ply) end
+	end
+end
+
 function BlockData:MakeFromCopy(data)
-	self.permitted = data.permitted
+	self.permittedSteamID = data.permittedSteamID --we copy only steamid data
 	self.preventMode = data.preventMode --1 teleport, 2 damage and dissolve, 3 just dissolve
 	self.permission_type = data.permission_type --false : accept players out of the list, true - in the list
 	
@@ -60,6 +68,7 @@ end
 function BlockData:create()
 	local data = {}
 	data.permitted = {}
+	self.permittedSteamID = {}
 	data.preventMode = 3 --1 teleport, 2 damage and dissolve, 3 just dissolve
 	data.permission_type = false --false : accept players out of the list, true - in the list
 	

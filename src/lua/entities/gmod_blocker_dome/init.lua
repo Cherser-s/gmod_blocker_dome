@@ -5,6 +5,7 @@ AddCSLuaFile('shared.lua')
 AddCSLuaFile('includes/DomeFrameUI.lua')
 AddCSLuaFile('includes/DomePermissionEditor.lua')
 AddCSLuaFile('includes/DomeShapeEditor.lua')
+AddCSLuaFile('includes/PlayerDataPanel.lua')
 
 util.AddNetworkString("dome_edit_data")
 util.AddNetworkString("gmod_dome_data_edited")
@@ -128,11 +129,17 @@ function ENT:Think()
 	if not (self:IsValid() and self.Block_Data) then return end
 	local i = 0
 	
+	self.Block_Data:MakeFromSteamID()
+	--empty list
+	if #self.Block_Data:GetPermittedPlayers() < 1 then return end
 	
-	
-	
-	local function isInSphere(ent)		
-		return self:GetPos():DistToSqr(ent:GetPos())<=(self.Block_Data.Shape.Radius)^2
+	local function InsideDome(ent)	
+		if self.Block_Data.Shape.Type == "Sphere" then
+			return self:GetPos():DistToSqr(ent:GetPos())<=(self.Block_Data.Shape.Radius)^2
+		else 
+			return false
+		end
+		
 	end
 	
 	local function checkPlayer(ply)
@@ -163,7 +170,7 @@ function ENT:Think()
 	local props = ents.GetAll()
 	--push all players off
 	for K,V in ipairs(props) do
-		if !isInSphere(V) then continue end
+		if !InsideDome(V) then continue end
 		if V:IsPlayer() then 
 			checkPlayer(V) 
 		elseif V:IsNPC() then

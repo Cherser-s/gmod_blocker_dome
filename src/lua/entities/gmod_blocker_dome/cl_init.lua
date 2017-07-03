@@ -17,7 +17,7 @@ end
 
 function ENT:Initialize()
 	self.drawType = {}
-	self.drawType.shape_type = "Sphere"
+	self.drawType.Type = "Sphere"
 	self.drawType.Radius = 512
 	PickDrawType(self.drawType)
 	self:MakeHollowProp()
