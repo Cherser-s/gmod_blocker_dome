@@ -23,9 +23,10 @@ end
 
 function DOME_ENT.player_panel:PerformLayout()
 	local w,h = self:GetSize()
-	self.NickPanel:SetSize(w,h*0.3)
-	self.SteamIDPanel:SetPos(0,h*0.35)
-	self.SteamIDPanel:SetSize(w,h*0.3)
+	self.NickPanel:SetPos(w*0.1,h*0.05)
+	self.NickPanel:SetSize(w*0.8,h*0.3)
+	self.SteamIDPanel:SetPos(w*0.1,h*0.35)
+	self.SteamIDPanel:SetSize(w*0.8,h*0.3)
 end
 
 function DOME_ENT.player_panel:GetPlayer()
@@ -48,7 +49,9 @@ function DOME_ENT.player_panel:SetPlayer(plyID)
 		self.SteamIDPanel:SetText(self.plyID)
 		
 	elseif IsEntity(plyID) and plyID:IsPlayer() then
+		
 		self.plyID = plyID:SteamID()
+				
 		self.SteamIDPanel:SetText(self.plyID)
 		self.NickPanel:SetText(plyID:Nick())
 	end
@@ -68,8 +71,8 @@ function DOME_ENT.player_panel:Paint(width,height)
 	local left,top,right,bottom = self:GetDockPadding()
 	right = width - right
 	bottom = height - bottom
-	hh = right - left
-	ww = bottom - top
+	ww = right - left
+	hh = bottom - top
 	draw.RoundedBox( math.min(ww,hh)/10, left, top, ww, hh, Color( 170, 0, 0 ) )
 end
 

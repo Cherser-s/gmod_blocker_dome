@@ -10,27 +10,23 @@ AddCSLuaFile('includes/BlockModePanel.lua')
 util.AddNetworkString("dome_edit_data")
 util.AddNetworkString("gmod_dome_data_edited")
 util.AddNetworkString("dome_get_type_data")
-
+--these npc can crash the client if applied damage data 
+--thx facepunch
 local RESTRICTED_CLASSES = {
 	"npc_helicopter",
 	"npc_combinegunship",
-	"npc_combinedropship"
+	"npc_combinedropship",
+	"npc_strider",
+	"npc_rollermine"
 }
 
 
 local function makeDissolve(self,ent,damage)
 
 		if !ent:IsValid() then return end
-		if table.HasValue(RESTRICTED_CLASSES,ent:GetClass()) then return end
- 		if (ent:IsPlayer() or ent:IsNPC()) then
- 			local Dmg=DamageInfo()
- 			Dmg:SetDamage(damage)
- 			Dmg:SetDamageType(DMG_DISSOLVE)
-			Dmg:SetAttacker(self)
-			Dmg:SetDamagePosition(ent:GetPos())
- 			ent:TakeDamageInfo(Dmg)
- 		else
-			local ind=tostring(ent:EntIndex())
+		
+ 		if (not (ent:IsPlayer() or ent:IsNPC())) or table.HasValue(RESTRICTED_CLASSES,ent:GetClass())  then
+ 			local ind=tostring(ent:EntIndex())
 			ent:SetName(ind)
 			local dissolver = ents.Create( "env_entity_dissolver" )
 			dissolver:SetPos( ent:GetPos() )
@@ -41,6 +37,14 @@ local function makeDissolve(self,ent,damage)
 			dissolver:SetKeyValue( "dissolvetype", 1)
 			dissolver:Fire( "Dissolve" )
 			timer.Simple(0.01,function() if dissolver:IsValid() then dissolver:Remove() end end)
+ 		else
+			local Dmg=DamageInfo()
+ 			Dmg:SetDamage(damage)
+ 			Dmg:SetDamageType(DMG_DISSOLVE)
+			Dmg:SetAttacker(self)
+			Dmg:SetDamagePosition(ent:GetPos())
+ 			ent:TakeDamageInfo(Dmg)
+			
 		end
 end
 
@@ -82,12 +86,12 @@ local PreventFuncs = {
 		-- teleport
 		function(self,ply)
 			local selfpos = self:GetPos()
-			local vv = ((ply:GetPos()-selfpos):GetNormalized())
+			local vv = (ply:GetPos()-selfpos)
 			if ply:GetMoveType() == MOVETYPE_NOCLIP then
 				vv= vv*(self.Block_Data.Shape.Radius+10)
 				ply:SetPos(selfpos+vv)
 			else
-				ply:SetVelocity(vv*2000)
+				ply:SetVelocity(vv*5)
 			end
 		end,
 		
@@ -103,13 +107,14 @@ local PreventFuncs = {
 	Props = {
 		function(self,ent)
 		--highly doubt that parented entities has their own physObjects
-			if not ent:GetParent() then
+			local parent = ent:GetParent()
+			if not (parent and parent:IsValid()) then
 				local phys = ent:GetPhysicsObject()
 				--check if physics object is present
 				if IsValid(phys) then
 					local selfpos = self:GetPos()
-					local vv = ((ply:GetPos()-selfpos):GetNormalized())
-					phys:ApplyForceCenter(vv*ent:GetInertia()*20)
+					local vv = ((ent:GetPos()-selfpos):GetNormalized())
+					phys:ApplyForceCenter(vv*phys:GetInertia()*300)
 				end
 				
 			end
@@ -156,7 +161,6 @@ function ENT:Think()
 	
 	self.Block_Data:MakeFromSteamID()
 	--empty list
-	if #self.Block_Data:GetPermittedPlayers() < 1 then return end
 	
 	local function InsideDome(ent)	
 		if self.Block_Data.Shape.Type == "Sphere" then
