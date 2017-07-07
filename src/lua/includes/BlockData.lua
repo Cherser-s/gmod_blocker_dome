@@ -68,7 +68,7 @@ end
 function BlockData:create()
 	local data = {}
 	data.permitted = {}
-	self.permittedSteamID = {}
+	data.permittedSteamID = {}
 	data.preventMode = 3 --1 teleport, 2 damage and dissolve, 3 just dissolve
 	data.permission_type = false --false : accept players out of the list, true - in the list
 	

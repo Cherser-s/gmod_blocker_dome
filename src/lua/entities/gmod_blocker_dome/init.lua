@@ -6,13 +6,22 @@ AddCSLuaFile('includes/DomeFrameUI.lua')
 AddCSLuaFile('includes/DomePermissionEditor.lua')
 AddCSLuaFile('includes/DomeShapeEditor.lua')
 AddCSLuaFile('includes/PlayerDataPanel.lua')
-
+AddCSLuaFile('includes/BlockModePanel.lua')
 util.AddNetworkString("dome_edit_data")
 util.AddNetworkString("gmod_dome_data_edited")
 util.AddNetworkString("dome_get_type_data")
 
+local RESTRICTED_CLASSES = {
+	"npc_helicopter",
+	"npc_combinegunship",
+	"npc_combinedropship"
+}
+
+
 local function makeDissolve(self,ent,damage)
+
 		if !ent:IsValid() then return end
+		if table.HasValue(RESTRICTED_CLASSES,ent:GetClass()) then return end
  		if (ent:IsPlayer() or ent:IsNPC()) then
  			local Dmg=DamageInfo()
  			Dmg:SetDamage(damage)
@@ -73,13 +82,18 @@ local PreventFuncs = {
 		-- teleport
 		function(self,ply)
 			local selfpos = self:GetPos()
-			local vv = ((ply:GetPos()-selfpos):GetNormalized())*(self.Block_Data.Radius+10)
-			ply:SetPos(selfpos+vv)
+			local vv = ((ply:GetPos()-selfpos):GetNormalized())
+			if ply:GetMoveType() == MOVETYPE_NOCLIP then
+				vv= vv*(self.Block_Data.Shape.Radius+10)
+				ply:SetPos(selfpos+vv)
+			else
+				ply:SetVelocity(vv*2000)
+			end
 		end,
 		
 		--damage dissolve
 		function(self,ply)
-			makeDissolve(self,ply,15)
+			makeDissolve(self,ply,5)
 		end,
 		--dissolve
 		function(self,ply)
@@ -88,6 +102,17 @@ local PreventFuncs = {
 	},
 	Props = {
 		function(self,ent)
+		--highly doubt that parented entities has their own physObjects
+			if not ent:GetParent() then
+				local phys = ent:GetPhysicsObject()
+				--check if physics object is present
+				if IsValid(phys) then
+					local selfpos = self:GetPos()
+					local vv = ((ply:GetPos()-selfpos):GetNormalized())
+					phys:ApplyForceCenter(vv*ent:GetInertia()*20)
+				end
+				
+			end
 			
 		end,
 		
@@ -144,7 +169,7 @@ function ENT:Think()
 	
 	local function checkPlayer(ply)
 		--use within sphere
-		if (!self.Block_Data:IsPermitted(pwner)) then 
+		if (!self.Block_Data:IsPermitted(ply)) then 
 			PreventFuncs.Players[self.Block_Data:GetPreventMode()](self,ply)
 		end
 	end
@@ -152,7 +177,7 @@ function ENT:Think()
 	local function checkNPC(ply)
 		--use within sphere
 		local pwner = getOwner(ply)
-		if  pwner and (!self.Block_Data:IsPermitted(pwner)) then
+		if  not (pwner and pwner:IsPlayer() and (self.Block_Data:IsPermitted(pwner))) then
 			PreventFuncs.Players[self.Block_Data:GetPreventMode()](self,ply)
 		end
 	end

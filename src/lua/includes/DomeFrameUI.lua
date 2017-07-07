@@ -1,5 +1,6 @@
 include('includes/DomePermissionEditor.lua')
 include('includes/DomeShapeEditor.lua')
+include('includes/BlockModePanel.lua')
 if !DOME_ENT then
 	DOME_ENT = {}
 end
@@ -11,9 +12,11 @@ function DOME_ENT.GUI_manager:Init()
 	local propSheet = vgui.Create("DPropertySheet",self)
 	propSheet:Dock(FILL)
 	self.ShapeBox = vgui.Create("DDomeManager_Shape_Editor")
-	propSheet:AddSheet("Shapes",self.ShapeBox)
+	propSheet:AddSheet("Shape",self.ShapeBox)
 	self.PermitBox = vgui.Create("DDomeManager_permeditor")
 	propSheet:AddSheet("Permissions",self.PermitBox)
+	self.BlockModeBox = vgui.Create("DDomeManager_blockPanel")
+	propSheet:AddSheet("Blocking mode",self.BlockModeBox)
 end
 
 
@@ -24,8 +27,10 @@ end
 function DOME_ENT.GUI_manager:SetData(data,entity)
 	self.Block_Data = data
 	self.ent_sender = entity
+	
 	self.ShapeBox:SetData(data)
 	self.PermitBox:SetData(data)
+	self.BlockModeBox:SetData(data)
 end
 
 function DOME_ENT.GUI_manager:OnRemove()

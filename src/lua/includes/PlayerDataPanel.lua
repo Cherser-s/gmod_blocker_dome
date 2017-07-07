@@ -15,6 +15,12 @@ function DOME_ENT.player_panel:OnRemove()
 	end
 end
 
+function DOME_ENT.player_panel:SetPanelRemovedListener(listener)
+	if not isfunction(listener) then error("Expected function, got ".. type(listener)) end
+	self.OnPanelRemoved = listener
+
+end
+
 function DOME_ENT.player_panel:PerformLayout()
 	local w,h = self:GetSize()
 	self.NickPanel:SetSize(w,h*0.3)
@@ -23,20 +29,48 @@ function DOME_ENT.player_panel:PerformLayout()
 end
 
 function DOME_ENT.player_panel:GetPlayer()
-	return self.ply
+	return self.plyID
 end
 
 
-function DOME_ENT.player_panel:SetPlayer(plySteamID)
-	self.plyID = plySteamID
-	local ply = player.GetBySteamID(plySteamID)
-	if ply then
-		self.NickPanel:SetText(ply:Nick())
-	else
-		self.NickPanel:SetText("Player is offline or don't exist.")
+
+
+function DOME_ENT.player_panel:SetPlayer(plyID)
+	if isstring(plyID) then
+		self.plyID = plyID
+		local ply = player.GetBySteamID(plyID)
+		if ply then
+			self.NickPanel:SetText(ply:Nick())
+		else
+			self.NickPanel:SetText("Player is offline or don't exist.")
+		end
+		
+		self.SteamIDPanel:SetText(self.plyID)
+		
+	elseif IsEntity(plyID) and plyID:IsPlayer() then
+		self.plyID = plyID:SteamID()
+		self.SteamIDPanel:SetText(self.plyID)
+		self.NickPanel:SetText(plyID:Nick())
 	end
-	
-	self.SteamIDPanel:SetText(plySteamID)
+end
+
+function DOME_ENT.player_panel:OnMousePressed(KEYCODE)
+	if KEYCODE == MOUSE_LEFT then
+		local menu = DermaMenu()
+		menu:AddOption("delete",function()
+			self:Remove()
+		end)
+		menu:Open()
+	end
+end
+
+function DOME_ENT.player_panel:Paint(width,height)
+	local left,top,right,bottom = self:GetDockPadding()
+	right = width - right
+	bottom = height - bottom
+	hh = right - left
+	ww = bottom - top
+	draw.RoundedBox( math.min(ww,hh)/10, left, top, ww, hh, Color( 170, 0, 0 ) )
 end
 
 vgui.Register("DDomeManager_playerpanel",DOME_ENT.player_panel,"Panel")

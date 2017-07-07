@@ -61,6 +61,7 @@ function DOME_ENT.GUI_manager_shape_editor:SetData(data)
 end
 
 function DOME_ENT.GUI_manager_shape_editor:PerformLayout(w,h)
+	--local w,h = self:GetSize()
 	
 end
 
